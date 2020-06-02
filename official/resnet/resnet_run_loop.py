@@ -322,6 +322,25 @@ def resnet_model_fn(features, labels, mode, model_class,
 
   logits = model(features, mode == tf.estimator.ModeKeys.TRAIN)
 
+  if mode == tf.estimator.ModeKeys.TRAIN:
+    # create a QAT training model
+    tf.contrib.quantize.experimental_create_training_graph(
+      input_graph=tf.get_default_graph(),
+      weight_bits=8,
+      activation_bits=8,
+      symmetric=True,
+      quant_delay=600000, # ~ 60 epochs
+      freeze_bn_delay=700000, # ~ 70 epoches
+      scope=None)
+  else:
+    tf.contrib.quantize.experimental_create_eval_graph(
+      input_graph=tf.get_default_graph(),
+      weight_bits=8,
+      activation_bits=8,
+      symmetric=True,
+      quant_delay=600000,
+      scope=None)
+  
   # This acts as a no-op if the logits are already in fp32 (provided logits are
   # not a SparseTensor). If dtype is is low precision, logits must be cast to
   # fp32 for numerical stability.
@@ -428,6 +447,7 @@ def resnet_model_fn(features, labels, mode, model_class,
   tf.summary.scalar('train_accuracy', accuracy[1])
   tf.summary.scalar('train_accuracy_top_5', accuracy_top_5[1])
 
+  
   return tf.estimator.EstimatorSpec(
       mode=mode,
       predictions=predictions,
@@ -514,7 +534,7 @@ def resnet_main(
   benchmark_logger = logger.get_benchmark_logger()
   benchmark_logger.log_run_info('resnet', dataset_name, run_params,
                                 test_id=flags_obj.benchmark_test_id)
-
+  
   train_hooks = hooks_helper.get_train_hooks(
       flags_obj.hooks,
       model_dir=flags_obj.model_dir,
@@ -555,7 +575,7 @@ def resnet_main(
     n_loops = math.ceil(flags_obj.train_epochs / flags_obj.epochs_between_evals)
     schedule = [flags_obj.epochs_between_evals for _ in range(int(n_loops))]
     schedule[-1] = flags_obj.train_epochs - sum(schedule[:-1])  # over counting.
-
+  
   for cycle_index, num_train_epochs in enumerate(schedule):
     tf.logging.info('Starting cycle: %d/%d', cycle_index, int(n_loops))
 
