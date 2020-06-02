@@ -329,8 +329,8 @@ def resnet_model_fn(features, labels, mode, model_class,
       weight_bits=8,
       activation_bits=8,
       symmetric=True,
-      quant_delay=600000, # ~ 60 epochs
-      freeze_bn_delay=700000, # ~ 70 epoches
+      quant_delay=600000 * 2, # ~ 60 epochs
+      freeze_bn_delay=700000 * 2, # ~ 70 epoches
       scope=None)
   else:
     tf.contrib.quantize.experimental_create_eval_graph(
@@ -338,7 +338,7 @@ def resnet_model_fn(features, labels, mode, model_class,
       weight_bits=8,
       activation_bits=8,
       symmetric=True,
-      quant_delay=600000,
+      quant_delay=600000 * 2,
       scope=None)
   
   # This acts as a no-op if the logits are already in fp32 (provided logits are
