@@ -31,7 +31,11 @@ def export(check_point_path, output_model_path, batch_size=None):
 
 
 if __name__ == '__main__':
-    export(sys.argv[1], sys.argv[2])
+    batch_size = None
+    if len(sys.argv) >= 4:
+        batch_size = int(sys.argv[3])
+    export(sys.argv[1], sys.argv[2], batch_size)
+
 
         
         
